@@ -18,3 +18,9 @@ class CustomerNameMissing(Exception):
 
 class CustomerPhoneMissing(Exception):
     pass
+
+class RestaurantNameMissing(Exception):
+    pass
+
+class RestaurantCapacityLessThanZero(Exception):
+    pass

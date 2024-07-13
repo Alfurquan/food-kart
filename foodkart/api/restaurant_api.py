@@ -1,7 +1,7 @@
 from ..data.db import DB
 from ..models.restaurant import Restaurant, MenuItem
 from ..config import config
-from ..exception import RestaurantNotFoundException, MenuItemNotFoundException
+from ..exception import RestaurantNotFoundException, MenuItemNotFoundException, RestaurantNameMissing, RestaurantCapacityLessThanZero
 
 class RestaurantAPI:
     def __init__(self, db: DB):
@@ -9,17 +9,19 @@ class RestaurantAPI:
         self.db.set_table_name('restaurants')
    
     def add_restaurant(self, restaurant: Restaurant):
+        if not restaurant.name or restaurant.name == ' ':
+            raise RestaurantNameMissing
+        
+        if restaurant.processing_capacity < 0:
+            raise RestaurantCapacityLessThanZero
+        
         id = self.db.create(restaurant.to_dict())
         self.db.update(id, {"id": id})
         return id
     
     def add_menu_item(self, rest_id: int, menu_item:MenuItem):
-        restaurant : Restaurant = self.db.get_item_by_id(rest_id)
+        restaurant : Restaurant = self.get_restaurant(rest_id)
         
-        if restaurant is None:
-            raise RestaurantNotFoundException
-        
-        restaurant = Restaurant.from_dict(restaurant)
         menu = restaurant.menu
         
         if len(menu) == 0:
@@ -29,17 +31,10 @@ class RestaurantAPI:
         
         restaurant.menu.append(menu_item)
         self.db.update(rest_id, restaurant.to_dict())
-        self.db.close()
         return menu_item.id
     
     def update_menu_item(self, rest_id: int, menu_item: MenuItem):
-        restaurant : Restaurant = self.db.get_item_by_id(rest_id)
-        
-        if restaurant is None:
-            raise RestaurantNotFoundException
-        
-        restaurant = Restaurant.from_dict(restaurant)
-        
+        restaurant : Restaurant = self.get_restaurant(rest_id)        
         existing_menu_item = next((item for item in restaurant.menu if item['id'] == menu_item.id), None)
 
         if existing_menu_item is None:
@@ -54,10 +49,14 @@ class RestaurantAPI:
         ]
         
         self.db.update(rest_id, restaurant.to_dict())
-        self.db.close()
     
     def get_restaurant(self, id: int):
-        return Restaurant.from_dict(self.db.get_item_by_id(id))
+        restaurant = self.db.get_item_by_id(id)
+        
+        if restaurant is None:
+            raise RestaurantNotFoundException
+        
+        return Restaurant.from_dict(restaurant)
     
     def update_restaurant(self, id: int, restaurant: Restaurant):
         self.db.update(id, restaurant.to_dict())
@@ -72,7 +71,6 @@ class RestaurantAPI:
     
     def get_menu_items(self, rest_name):
         restaurants = self.db.get_all()
-        self.db.close()
         
         restaurant = next((restaurant for restaurant in restaurants if restaurant['name'].lower() == rest_name.lower()), None)
         
