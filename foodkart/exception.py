@@ -12,3 +12,9 @@ class MenuItemNotFoundException(Exception):
 
 class OrderAlreadyDelivered(Exception):
     pass
+
+class CustomerNameMissing(Exception):
+    pass
+
+class CustomerPhoneMissing(Exception):
+    pass
