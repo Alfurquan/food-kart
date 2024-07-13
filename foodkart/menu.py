@@ -7,6 +7,7 @@ from .api.restaurant_api import RestaurantAPI
 from .models.menuitem import MenuItem
 from .exception import RestaurantNotFoundException, MenuItemNotFoundException
 from .utilities.validation import validate_price
+from .config.config import get_db
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -20,7 +21,7 @@ def add(
     Adds a menu item to menu of the restaurant id provided.
     """
     name = " ".join(name) if name else None
-    api = RestaurantAPI()
+    api = RestaurantAPI(get_db())
     
     try:
         api.add_menu_item(restaurant_id, MenuItem(name, price))
@@ -36,7 +37,7 @@ def list(
     Lists menu items for the restaurant provided
     """
     rest_name = " ".join(rest_name)
-    api = RestaurantAPI()
+    api = RestaurantAPI(get_db())
     try:
         menu = api.get_menu_items(rest_name)
     except RestaurantNotFoundException:
@@ -65,7 +66,7 @@ def update(
     updates a menu item to menu of the restaurant id provided.
     """
     name = " ".join(name) if name else None
-    api = RestaurantAPI()
+    api = RestaurantAPI(get_db())
     
     try:
         api.update_menu_item(restaurant_id, MenuItem(name, price, id))

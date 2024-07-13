@@ -10,11 +10,11 @@ from ..models.order import Order, OrderItem, OrderStatus
 from ..models.restaurant import Restaurant
 
 class OrderAPI:
-    def __init__(self, customer_api : CustomerAPI, restaurant_api: RestaurantAPI):
-        self.db_path = config.get_db_path()
-        self.db = DB(self.db_path, "orders", "foodkart")
+    def __init__(self, customer_api : CustomerAPI, restaurant_api: RestaurantAPI, db: DB):
+        self.db = db
         self.customer_api = customer_api
         self.restaurant_api = restaurant_api
+        self.db.set_table_name('orders')
     
     def list_orders(self, cust_id: int):
         orders = self.db.get_all()
@@ -37,7 +37,7 @@ class OrderAPI:
         
         food_items = list(zip(items, quantities))
         orders : List[Order] = []
-        restaurant_selection : RestaurantSelection = get_restaurant_selection_strategy()
+        restaurant_selection : RestaurantSelection = get_restaurant_selection_strategy(self.restaurant_api)
         
         for food_item in food_items:
             food_item_name, food_item_quantity = food_item
@@ -85,8 +85,7 @@ class OrderAPI:
                 continue
             
             total_quantity = sum([item.quantity for item in order.items])
-            rest = self.restaurant_api.get_restaurant(order.restaurant_id)
-            restaurant = Restaurant.from_dict(rest)
+            restaurant = self.restaurant_api.get_restaurant(order.restaurant_id)
             capacity = restaurant.processing_capacity - total_quantity
             restaurant.processing_capacity = capacity
             self.restaurant_api.update_restaurant(order.restaurant_id, restaurant)   
@@ -107,7 +106,7 @@ class OrderAPI:
         self.db.close()
         
         # Add back restaurant processing capability
-        restaurant : Restaurant = Restaurant.from_dict(self.restaurant_api.get_restaurant(order.restaurant_id))
+        restaurant : Restaurant = self.restaurant_api.get_restaurant(order.restaurant_id)
         quantities = sum([order_item["quantity"] for order_item in order.items])
         restaurant.processing_capacity += quantities
         self.restaurant_api.update_restaurant(order.restaurant_id, restaurant)

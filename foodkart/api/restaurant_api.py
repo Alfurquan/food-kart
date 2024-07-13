@@ -4,14 +4,13 @@ from ..config import config
 from ..exception import RestaurantNotFoundException, MenuItemNotFoundException
 
 class RestaurantAPI:
-    def __init__(self):
-        self.db_path = config.get_db_path()
-        self.db = DB(self.db_path, "restaurants", "foodkart")
+    def __init__(self, db: DB):
+        self.db = db
+        self.db.set_table_name('restaurants')
    
     def add_restaurant(self, restaurant: Restaurant):
         id = self.db.create(restaurant.to_dict())
         self.db.update(id, {"id": id})
-        self.db.close()
         return id
     
     def add_menu_item(self, rest_id: int, menu_item:MenuItem):
@@ -58,7 +57,7 @@ class RestaurantAPI:
         self.db.close()
     
     def get_restaurant(self, id: int):
-        return self.db.get_item_by_id(id)
+        return Restaurant.from_dict(self.db.get_item_by_id(id))
     
     def update_restaurant(self, id: int, restaurant: Restaurant):
         self.db.update(id, restaurant.to_dict())

@@ -2,6 +2,7 @@ import typer
 from typing import List
 from .api.customer_api import CustomerAPI
 from .models.customer import Customer
+from .config.config import get_db
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -14,6 +15,7 @@ def register(
     Register a customer to the app.
     """
     name = " ".join(name)
-    api = CustomerAPI()
+    api = CustomerAPI(get_db())
     api.add_customer(Customer(name, phone))
     print("Customer registered successfully!")
+    

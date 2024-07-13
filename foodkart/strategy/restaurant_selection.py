@@ -16,8 +16,7 @@ class RestaurantSelection(ABC):
         """
         Returns all restaurants that have food item specified and can process order
         """
-        restaurant_api = RestaurantAPI()
-        restaurants = restaurant_api.list_restaurants()
+        restaurants = self.restaurant_api.list_restaurants()
         food_item_name, food_item_quantity = food_item
         selected_restaurants = []
         for rest in restaurants:

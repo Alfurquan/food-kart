@@ -7,8 +7,9 @@ from .api.customer_api import CustomerAPI
 from .api.order_api import OrderAPI
 from .api.restaurant_api import RestaurantAPI
 from .models.order import Order
-from .exception import OrderNotFoundException, OrderAlreadyDelivered
+from .exception import OrderNotFoundException, OrderAlreadyDelivered, CustomerNotFoundException
 from .utilities.validation import validate_quantity
+from .config.config import get_db
 app = typer.Typer(no_args_is_help=True)
 
 
@@ -21,38 +22,42 @@ def book(
     """
     Book an order for customer with id.
     """
-    api = OrderAPI(CustomerAPI(), RestaurantAPI())
+    api = OrderAPI(CustomerAPI(get_db()), RestaurantAPI(get_db()), get_db())
     
     if (len(item) != len(quantity)):
         print("Items and quantity do not match, please enter item and quantity in order. E.g --item <item name> --quantity <quantity of the item>")
         raise typer.Exit(1)
 
-    orders: List[Order] =  api.create_orders(customer_id, item, quantity)
-    servable_orders : List[Order] = [order for order in orders if order.restaurant_id is not None]
-    not_servable_orders : List[Order] = [order for order in orders if order.restaurant_id is None]
-    
-    if len(servable_orders) == 0:
-        print("Order cannot be placed as no restuarant found to server the items placed")
-        raise typer.Exit(1)
-    
-    print("Order placed. Please check details....")
-    table = Table(box=rich.box.SIMPLE)
-    table.add_column("Id")
-    table.add_column("Restaurant name")
-    table.add_column("Order status")
-    table.add_column("Cost")
-    table.add_column("Order items")
-    for order in servable_orders:
-        table.add_row(str(order.id), order.restaurant_name, order.order_status, str(order.cost), str(order.items))
-    
-    out = StringIO()
-    rich.print(table, file=out)
-    print(out.getvalue())
-    
-    for order in not_servable_orders:
-        for item in order.items:
-            print(f"Item {item.name} cannot be served as no restaurant found to serve them")
-            
+    try:
+        orders: List[Order] =  api.create_orders(customer_id, item, quantity)
+        servable_orders : List[Order] = [order for order in orders if order.restaurant_id is not None]
+        not_servable_orders : List[Order] = [order for order in orders if order.restaurant_id is None]
+
+        if len(servable_orders) == 0:
+            print("Order cannot be placed as no restuarant found to server the items placed")
+            raise typer.Exit(1)
+
+        print("Order placed. Please check details....")
+        table = Table(box=rich.box.SIMPLE)
+        table.add_column("Id")
+        table.add_column("Restaurant name")
+        table.add_column("Order status")
+        table.add_column("Cost")
+        table.add_column("Order items")
+        for order in servable_orders:
+            table.add_row(str(order.id), order.restaurant_name, order.order_status, str(order.cost), str(order.items))
+
+        out = StringIO()
+        rich.print(table, file=out)
+        print(out.getvalue())
+
+        for order in not_servable_orders:
+            for item in order.items:
+                print(f"Item {item.name} cannot be served as no restaurant found to serve them")
+
+    except CustomerNotFoundException:
+        print(f"Customer with id {customer_id} does not exists")
+        
 @app.command()
 def deliver(
     order_id: int = typer.Option(..., "--order-id", "-o", help="Order id to mark as delivered")
@@ -60,7 +65,7 @@ def deliver(
     """
     Mark the order by order id provided as delivered.
     """
-    api = OrderAPI(CustomerAPI(), RestaurantAPI())
+    api = OrderAPI(CustomerAPI(get_db()), RestaurantAPI(get_db()), get_db())
     
     try:
         api.deliver_order(order_id)
@@ -78,7 +83,7 @@ def list(
     """
     List all orders, and for a customer if customer id provided
     """
-    api = OrderAPI(CustomerAPI(), RestaurantAPI())
+    api = OrderAPI(CustomerAPI(get_db()), RestaurantAPI(get_db()), get_db())
     orders = api.list_orders(customer_id)
     table = Table(box=rich.box.SIMPLE)
     table.add_column("Id")

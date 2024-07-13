@@ -1,10 +1,11 @@
-from typing import List, Tuple
-from ..models.restaurant import Restaurant
-from ..models.order import OrderItem
+from typing import Tuple
 from .restaurant_selection import RestaurantSelection
 from ..api.restaurant_api import RestaurantAPI
 
 class CheapestPriceRestaurantSelection(RestaurantSelection):
+    
+    def __init__(self, restaurant_api: RestaurantAPI):
+        self.restaurant_api = restaurant_api
     
     def select_restaurant(self, food_item: Tuple[str | int]):
         selected_restaurants = self.get_eligible_restaurants(food_item)

@@ -1,12 +1,14 @@
 import tinydb
 
 class DB:
-    def __init__(self, db_path: str, table_name: str, db_file_prefix: str):
+    def __init__(self, db_path: str, db_file_prefix: str):
         self.db = tinydb.TinyDB(
             db_path / f"{db_file_prefix}.json", create_dirs=True
         )
-        self.table_name = table_name
         
+    def set_table_name(self, table_name):
+        self.table_name = table_name
+     
     def create(self, item: dict):
         id = self.get_table().insert(item)
         return id

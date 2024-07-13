@@ -1,12 +1,11 @@
 from ..data.db import DB
 from ..models.customer import Customer
-from ..config import config
-from ..exception import CustomerNameMissing, CustomerPhoneMissing
+from ..exception import CustomerNameMissing, CustomerPhoneMissing, CustomerNotFoundException
 
 class CustomerAPI:
-    def __init__(self, db: DB = None):
-        self.db_path = config.get_db_path()
-        self.db = DB(self.db_path, "customer", "foodkart") if db is None else db
+    def __init__(self, db: DB):
+        self.db = db
+        self.db.set_table_name('customers')
         
     def add_customer(self, customer: Customer):
         if not customer.name or customer.name == ' ':
@@ -20,4 +19,8 @@ class CustomerAPI:
         return id
     
     def get_customer(self, id: int):
-        return Customer.from_dict(self.db.get_item_by_id(id))
+        customer = self.db.get_item_by_id(id)
+        if customer is None:
+            raise CustomerNotFoundException
+        
+        return Customer.from_dict(customer)

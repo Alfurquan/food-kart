@@ -6,6 +6,7 @@ from typing import List
 from .api.restaurant_api import RestaurantAPI
 from .models.restaurant import Restaurant
 from .utilities.validation import validate_capacity
+from .config.config import get_db
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -17,7 +18,7 @@ def add(
     """
     Adds a restaurant.
     """
-    api = RestaurantAPI()
+    api = RestaurantAPI(get_db())
     name = " ".join(name) if name else None
     api.add_restaurant(Restaurant(name, capacity))
     print("Restaurant added!")
@@ -29,7 +30,7 @@ def list(
     """
     List restaurants in the food kart chain
     """
-    api = RestaurantAPI()
+    api = RestaurantAPI(get_db())
     name = " ".join(name) if name else None
     restaurants = api.list_restaurants(name)
     table = Table(box=rich.box.SIMPLE)
