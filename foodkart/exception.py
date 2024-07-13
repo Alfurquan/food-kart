@@ -13,14 +13,20 @@ class MenuItemNotFoundException(Exception):
 class OrderAlreadyDelivered(Exception):
     pass
 
-class CustomerNameMissing(Exception):
+class CustomerNameMissingException(Exception):
     pass
 
-class CustomerPhoneMissing(Exception):
+class CustomerPhoneMissingException(Exception):
     pass
 
-class RestaurantNameMissing(Exception):
+class RestaurantNameMissingException(Exception):
     pass
 
-class RestaurantCapacityLessThanZero(Exception):
+class RestaurantCapacityLessThanZeroException(Exception):
+    pass
+
+class MenuNameMissingException(Exception):
+    pass
+
+class MenuPriceNegativeException(Exception):
     pass

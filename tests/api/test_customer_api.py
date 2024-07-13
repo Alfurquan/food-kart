@@ -1,7 +1,7 @@
 import pytest
 from foodkart.models.customer import Customer
 from foodkart.api.customer_api import CustomerAPI
-from foodkart.exception import CustomerNameMissing, CustomerPhoneMissing
+from foodkart.exception import CustomerNameMissingException, CustomerPhoneMissingException
 
 def test_add_customer_valid_inputs(foodkart_db):
     api = CustomerAPI(foodkart_db)
@@ -13,13 +13,13 @@ def test_add_customer_valid_inputs(foodkart_db):
 def test_add_customer_name_missing(foodkart_db, customer_name):
     api = CustomerAPI(foodkart_db)
     customer = Customer(customer_name, "7003404263")
-    with pytest.raises(CustomerNameMissing):
+    with pytest.raises(CustomerNameMissingException):
         api.add_customer(customer)
         
 @pytest.mark.parametrize('customer_phone', ['', None, ' '])
 def test_add_customer_phone_missing(foodkart_db, customer_phone):
     api = CustomerAPI(foodkart_db)
     customer = Customer("John", customer_phone)
-    with pytest.raises(CustomerPhoneMissing):
+    with pytest.raises(CustomerPhoneMissingException):
         api.add_customer(customer)
         

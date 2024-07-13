@@ -1,6 +1,6 @@
 from ..data.db import DB
 from ..models.customer import Customer
-from ..exception import CustomerNameMissing, CustomerPhoneMissing, CustomerNotFoundException
+from ..exception import CustomerNameMissingException, CustomerPhoneMissingException, CustomerNotFoundException
 
 class CustomerAPI:
     def __init__(self, db: DB):
@@ -9,10 +9,10 @@ class CustomerAPI:
         
     def add_customer(self, customer: Customer):
         if not customer.name or customer.name == ' ':
-            raise CustomerNameMissing
+            raise CustomerNameMissingException
         
         if not customer.phone or customer.phone == ' ':
-            raise CustomerPhoneMissing
+            raise CustomerPhoneMissingException
         
         id = self.db.create(customer.to_dict())
         self.db.update(id, {"id": id})

@@ -1,7 +1,7 @@
 from ..data.db import DB
 from ..models.restaurant import Restaurant, MenuItem
 from ..config import config
-from ..exception import RestaurantNotFoundException, MenuItemNotFoundException, RestaurantNameMissing, RestaurantCapacityLessThanZero
+from ..exception import RestaurantNotFoundException, MenuItemNotFoundException, RestaurantNameMissingException, RestaurantCapacityLessThanZeroException, MenuNameMissingException, MenuPriceNegativeException
 
 class RestaurantAPI:
     def __init__(self, db: DB):
@@ -10,16 +10,22 @@ class RestaurantAPI:
    
     def add_restaurant(self, restaurant: Restaurant):
         if not restaurant.name or restaurant.name == ' ':
-            raise RestaurantNameMissing
+            raise RestaurantNameMissingException
         
         if restaurant.processing_capacity < 0:
-            raise RestaurantCapacityLessThanZero
+            raise RestaurantCapacityLessThanZeroException
         
         id = self.db.create(restaurant.to_dict())
         self.db.update(id, {"id": id})
         return id
     
     def add_menu_item(self, rest_id: int, menu_item:MenuItem):
+        if not menu_item.name or menu_item.name == ' ':
+            raise MenuNameMissingException
+        
+        if menu_item.price < 0:
+            raise MenuPriceNegativeException
+        
         restaurant : Restaurant = self.get_restaurant(rest_id)
         
         menu = restaurant.menu
