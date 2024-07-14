@@ -132,3 +132,75 @@ def test_update_menu_item_menu_item_found(restaurant_api, valid_restaurant, db, 
     assert restaurant.menu[0].price == valid_menu_item.price
     db.update.assert_called_once_with(1, restaurant.to_dict())
     
+def test_get_restaurant_restaurant_not_found(restaurant_api, db):
+    db.get_item_by_id.return_value = None
+    
+    with pytest.raises(RestaurantNotFoundException):
+        restaurant_api.get_restaurant(1)
+        
+def test_get_restaurant_restaurant_found(restaurant_api, db):
+    restaurant = Restaurant('Arsalan', 20)
+    restaurant.id = 1    
+    db.get_item_by_id.return_value = restaurant.to_dict()
+    
+    found_restaurant = restaurant_api.get_restaurant(1)
+    assert restaurant.id == found_restaurant.id
+    assert restaurant.name == found_restaurant.name
+    assert restaurant.processing_capacity == found_restaurant.processing_capacity
+    db.get_item_by_id.assert_called_once_with(1)
+    
+def test_update_restaurant(restaurant_api, db):
+    restaurant = Restaurant('Arsalan', 20)
+    restaurant.id = 1
+    
+    restaurant_api.update_restaurant(1, restaurant)
+    db.update.assert_called_once_with(1, restaurant.to_dict())
+    
+def test_list_restaurants_name_is_none(restaurant_api, db):
+    restaurants = [
+        {'id': 1, 'name': 'Arsalan', 'processing_capacity': 20},
+        {'id': 2, 'name': 'Zeeshan', 'processing_capacity': 25},
+        {'id': 3, 'name': 'Mcdonalds', 'processing_capacity': 20},
+    ]
+    
+    db.get_all.return_value = restaurants
+    found_restaurants = restaurant_api.list_restaurants()
+    assert restaurants == found_restaurants
+    
+def test_list_restaurants_name_is_not_none(restaurant_api, db):
+    restaurants = [
+        {'id': 1, 'name': 'Arsalan', 'processing_capacity': 20},
+        {'id': 2, 'name': 'Zeeshan', 'processing_capacity': 25},
+        {'id': 3, 'name': 'Mcdonalds', 'processing_capacity': 20},
+    ]
+    expected_restaurants = [
+        {'id': 1, 'name': 'Arsalan', 'processing_capacity': 20},
+    ]
+    db.get_all.return_value = restaurants
+    found_restaurants = restaurant_api.list_restaurants('Arsalan')
+    assert expected_restaurants == found_restaurants
+    
+def test_get_menu_items_restaurant_not_found(restaurant_api, db):
+    restaurants = [
+        {'id': 1, 'name': 'Arsalan', 'processing_capacity': 20},
+        {'id': 2, 'name': 'Zeeshan', 'processing_capacity': 25},
+        {'id': 3, 'name': 'Mcdonalds', 'processing_capacity': 20},
+    ]
+    db.get_all.return_value = restaurants
+    with pytest.raises(RestaurantNotFoundException):
+        restaurant_api.get_menu_items('Royal')
+        
+def test_get_menu_items_restaurant_found(restaurant_api, db):
+    restaurants = [
+        {'id': 1, 'name': 'Arsalan', 'processing_capacity': 20, 'menu': [{'id': 1, 'name': 'Biryani', 'price': 200}]},
+        {'id': 2, 'name': 'Zeeshan', 'processing_capacity': 25},
+        {'id': 3, 'name': 'Mcdonalds', 'processing_capacity': 20},
+    ]
+    db.get_all.return_value = restaurants
+    expected_menu = restaurants[0]['menu']
+    
+    actual_menu = restaurant_api.get_menu_items('Arsalan')
+    assert expected_menu == actual_menu
+    
+
+    
