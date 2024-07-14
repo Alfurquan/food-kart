@@ -40,19 +40,29 @@ class RestaurantAPI:
         return menu_item.id
     
     def update_menu_item(self, rest_id: int, menu_item: MenuItem):
-        restaurant : Restaurant = self.get_restaurant(rest_id)        
-        existing_menu_item = next((item for item in restaurant.menu if item['id'] == menu_item.id), None)
-
+        if not menu_item.name or menu_item.name == ' ':
+            raise MenuNameMissingException
+        
+        if menu_item.price < 0:
+            raise MenuPriceNegativeException
+        
+        restaurant : Restaurant = self.get_restaurant(rest_id)
+        existing_menu_item = next((item for item in restaurant.menu if item.id == menu_item.id), None)
+        
         if existing_menu_item is None:
             raise MenuItemNotFoundException
         
-        restaurant.menu = [
-            {**item, 'name': menu_item.name} if item['id'] == menu_item.id and menu_item.name is not None else item for item in restaurant.menu
-        ]
-        
-        restaurant.menu = [
-            {**item, 'price': menu_item.price} if item['id'] == menu_item.id and menu_item.price is not None else item for item in restaurant.menu
-        ]
+        print(menu_item)
+        menu_items = restaurant.menu
+        restaurant.menu = []
+        for item in menu_items:
+            if item.id == menu_item.id:
+                if menu_item.name is not None:
+                    item.name = menu_item.name
+                
+                if menu_item.price:
+                    item.price = menu_item.price
+            restaurant.menu.append(item)
         
         self.db.update(rest_id, restaurant.to_dict())
     
