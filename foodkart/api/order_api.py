@@ -16,7 +16,7 @@ class OrderAPI:
         self.restaurant_api = restaurant_api
         self.db.set_table_name('orders')
     
-    def list_orders(self, cust_id: int):
+    def list_orders(self, cust_id: int = None):
         orders = self.db.get_all()
         
         if cust_id is not None:
