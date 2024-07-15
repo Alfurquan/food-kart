@@ -95,12 +95,12 @@ class RestaurantAPI:
         return restaurant_list
     
     def get_menu_items(self, rest_name):
-        restaurants = self.db.get_all()
+        restaurants = self.list_restaurants(rest_name)
         
-        restaurant = next((restaurant for restaurant in restaurants if restaurant['name'].lower() == rest_name.lower()), None)
+        restaurant = next((restaurant for restaurant in restaurants if restaurant.name.lower() == rest_name.lower()), None)
         
         if restaurant is None:
             raise RestaurantNotFoundException
         
-        return restaurant['menu']
+        return restaurant.menu
         

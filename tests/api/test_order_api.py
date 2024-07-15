@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 from foodkart.api.restaurant_api import RestaurantAPI
 from foodkart.api.order_api import OrderAPI
 from foodkart.api.customer_api import CustomerAPI
@@ -165,3 +165,44 @@ def test_create_orders_single_item(order_api, customer_api, restaurant_api, db):
         # Verifying restaurant API interactions
         restaurant_api.get_restaurant.assert_called_once_with(1)
         restaurant_api.update_restaurant.assert_called_once()
+        
+        
+def test_create_orders_multiple_items(order_api, customer_api, restaurant_api, db):    
+    db.create.side_effect = lambda order: 1 if order['restaurant_id'] == 1 else 2 
+    customer = Customer(1, 'John', '7003404263')
+    restaurant_one = Restaurant(id=1, name='Arsalan', processing_capacity=20, menu=[MenuItem(id=1, name='Biryani', price=200)])
+    restaurant_two = Restaurant(id=2, name='KFC', processing_capacity=15, menu=[MenuItem(id=1, name='Noodles', price=100)])
+    
+    customer_api.get_customer.return_value = customer
+    restaurant_api.get_restaurant.side_effect = lambda order_id: restaurant_one if order_id == 1 else restaurant_two
+
+    with patch('foodkart.strategy.api.StrategyAPI.get_restaurant_selection_strategy') as get_restaurant_selection_strategy_mock:
+        restaurant_selection = Mock()
+        restaurant_selection.select_restaurant = Mock(side_effect=lambda food_item: restaurant_one if food_item == ('Biryani', 1) else (restaurant_two if food_item == ('Noodles', 2) else None))
+        get_restaurant_selection_strategy_mock.return_value = restaurant_selection
+        
+        result = order_api.create_orders(1, ['Biryani', 'Noodles'], [1, 2])
+
+        assert len(result) == 2
+        assert result[0].id == 1
+        assert result[0].restaurant_id == 1
+        assert result[0].cost == 200
+        assert result[0].items[0].name == "Biryani"
+        assert result[0].items[0].quantity == 1
+        assert restaurant_one.processing_capacity == 19
+        
+        assert result[1].id == 2
+        assert result[1].restaurant_id == 2
+        assert result[1].cost == 200
+        assert result[1].items[0].name == "Noodles"
+        assert result[1].items[0].quantity == 2
+        assert restaurant_two.processing_capacity == 13
+
+        # Verifying DB interactions
+        db.create.call_count == 2
+        db.update.assert_has_calls([call(1, {'id':1}), call(2, {'id': 2})])
+        db.close.assert_called_once()
+
+        # # Verifying restaurant API interactions
+        restaurant_api.get_restaurant.assert_has_calls([call(1), call(2)])
+        restaurant_api.update_restaurant.assert_has_calls([call(1, restaurant_one), call(2, restaurant_two)])

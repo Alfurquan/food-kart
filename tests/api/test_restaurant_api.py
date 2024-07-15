@@ -185,24 +185,24 @@ def test_list_restaurants_name_is_not_none(restaurant_api, db):
     found_restaurants = restaurant_api.list_restaurants('Arsalan')
     assert expected_restaurants == found_restaurants
     
-def test_get_menu_items_restaurant_not_found(restaurant_api, db):
+def test_get_menu_items_restaurant_not_found(restaurant_api):
     restaurants = [
-        {'id': 1, 'name': 'Arsalan', 'processing_capacity': 20},
-        {'id': 2, 'name': 'Zeeshan', 'processing_capacity': 25},
-        {'id': 3, 'name': 'Mcdonalds', 'processing_capacity': 20},
+        Restaurant(id=1, name='Arsalan', processing_capacity=20),
+        Restaurant(id=2, name='Zeeshan', processing_capacity=25),
+        Restaurant(id=3, name='Mcdonalds', processing_capacity=20)
     ]
-    db.get_all.return_value = restaurants
+    restaurant_api.list_restaurants = MagicMock(return_value = restaurants)
     with pytest.raises(RestaurantNotFoundException):
         restaurant_api.get_menu_items('Royal')
         
-def test_get_menu_items_restaurant_found(restaurant_api, db):
+def test_get_menu_items_restaurant_found(restaurant_api):
     restaurants = [
-        {'id': 1, 'name': 'Arsalan', 'processing_capacity': 20, 'menu': [{'id': 1, 'name': 'Biryani', 'price': 200}]},
-        {'id': 2, 'name': 'Zeeshan', 'processing_capacity': 25},
-        {'id': 3, 'name': 'Mcdonalds', 'processing_capacity': 20},
+        Restaurant(id=1, name='Arsalan', processing_capacity=20),
+        Restaurant(id=2, name='Zeeshan', processing_capacity=25),
+        Restaurant(id=3, name='Mcdonalds', processing_capacity=20)
     ]
-    db.get_all.return_value = restaurants
-    expected_menu = restaurants[0]['menu']
+    restaurant_api.list_restaurants = MagicMock(return_value = restaurants)
+    expected_menu = restaurants[0].menu
     
     actual_menu = restaurant_api.get_menu_items('Arsalan')
     assert expected_menu == actual_menu

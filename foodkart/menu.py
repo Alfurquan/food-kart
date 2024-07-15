@@ -48,7 +48,7 @@ def list(
     table.add_column("name")
     table.add_column("Price")
     for item in menu:
-        item = MenuItem.from_dict(item)
+        #item = MenuItem.from_dict(item)
         table.add_row(item.name, str(item.price))
         
     out = StringIO()
