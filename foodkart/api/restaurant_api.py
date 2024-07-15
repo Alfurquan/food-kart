@@ -52,7 +52,6 @@ class RestaurantAPI:
         if existing_menu_item is None:
             raise MenuItemNotFoundException
         
-        print(menu_item)
         menu_items = restaurant.menu
         restaurant.menu = []
         for item in menu_items:
@@ -79,20 +78,11 @@ class RestaurantAPI:
     
     def list_restaurants(self, name = None):
         restaurants = self.db.get_all()
-        restaurant_list : List[Restaurant] = []
         
         if name is not None:
             restaurants = [restaurant for restaurant in restaurants if restaurant["name"].lower() == name.lower()]
         
-        for restaurant in restaurants:
-            rest = Restaurant.from_dict(restaurant)
-            menu_items = rest.menu
-            rest.menu = []
-            for menu in menu_items:
-                rest.menu.append(MenuItem.from_dict(menu))
-            restaurant_list.append(rest)
-        
-        return restaurant_list
+        return [Restaurant.from_dict(restaurant) for restaurant in restaurants]
     
     def get_menu_items(self, rest_name):
         restaurants = self.list_restaurants(rest_name)

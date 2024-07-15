@@ -11,7 +11,13 @@ class Restaurant:
 
     @classmethod
     def from_dict(cls, d):
-        return Restaurant(**d)
+        restaurant =  Restaurant(**d)
+        menu = restaurant.menu
+        restaurant.menu = []
+        for menu_item in menu:
+            restaurant.menu.append(MenuItem.from_dict(menu_item))
+        
+        return restaurant
 
     def to_dict(self):
         return asdict(self)

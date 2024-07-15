@@ -40,7 +40,13 @@ class Order:
 
     @classmethod
     def from_dict(cls, d):
-        return Order(**d)
+        order = Order(**d)
+        items = order.items
+        order.items = []
+        for item in items:
+            order.items.append(OrderItem.from_dict(item))
+        
+        return order
     
     def to_dict(self):
         return asdict(self)
