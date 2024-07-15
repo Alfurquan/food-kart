@@ -20,8 +20,8 @@ class RestaurantSelection(ABC):
         food_item_name, food_item_quantity = food_item
         selected_restaurants = []
         for rest in restaurants:
-            for menu_item in rest["menu"]:
-                if menu_item["name"].lower() == food_item_name.lower() and rest["processing_capacity"] >= food_item_quantity:
+            for menu_item in rest.menu:
+                if menu_item.name.lower() == food_item_name.lower() and rest.processing_capacity >= food_item_quantity:
                     selected_restaurants.append(rest)
         
         return selected_restaurants

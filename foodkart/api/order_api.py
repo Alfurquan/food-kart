@@ -4,7 +4,7 @@ from ..data.db import DB
 from .customer_api import CustomerAPI
 from .restaurant_api import RestaurantAPI
 from ..exception import CustomerNotFoundException, OrderNotFoundException, OrderAlreadyDelivered
-from ..strategy import get_restaurant_selection_strategy
+from ..strategy.api import StrategyAPI
 from ..strategy.restaurant_selection import RestaurantSelection
 from ..models.order import Order, OrderItem, OrderStatus
 from ..models.restaurant import Restaurant
@@ -37,8 +37,7 @@ class OrderAPI:
         
         food_items = list(zip(items, quantities))
         orders : List[Order] = []
-        restaurant_selection : RestaurantSelection = get_restaurant_selection_strategy(self.restaurant_api)
-        
+        restaurant_selection : RestaurantSelection = StrategyAPI.get_restaurant_selection_strategy(self.restaurant_api)
         for food_item in food_items:
             food_item_name, food_item_quantity = food_item
             selected_restaurant = restaurant_selection.select_restaurant(food_item)
@@ -53,9 +52,9 @@ class OrderAPI:
                 orders.append(order)
                 continue
             
-            cost = sum([menu['price'] for menu in selected_restaurant['menu'] if menu['name'].lower() == food_item_name.lower()]) * food_item_quantity
+            cost = sum([menu.price for menu in selected_restaurant.menu if menu.name.lower() == food_item_name.lower()]) * food_item_quantity
             
-            orig_order = next((order for order in orders if order.restaurant_id == selected_restaurant['id']), None)
+            orig_order = next((order for order in orders if order.restaurant_id == selected_restaurant.id), None)
             
             if orig_order is not None:
                 ## Update order for restaurant to include off this item         
@@ -63,8 +62,8 @@ class OrderAPI:
                 orig_order.items.append(order_item)
             else:
                 ## Create off a new order 
-                order.restaurant_id = selected_restaurant['id']
-                order.restaurant_name = selected_restaurant['name']
+                order.restaurant_id = selected_restaurant.id
+                order.restaurant_name = selected_restaurant.name
                 order.order_status = OrderStatus.Processing.value
                 order.cost = cost
                 orders.append(order)

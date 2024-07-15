@@ -39,7 +39,6 @@ def list(
     table.add_column("Processing capacity")
     table.add_column("Menu items")
     for restaurant in restaurants:
-        restaurant = Restaurant.from_dict(restaurant)
         table.add_row(str(restaurant.id), restaurant.name, str(restaurant.processing_capacity), str(restaurant.menu))
     
     out = StringIO()

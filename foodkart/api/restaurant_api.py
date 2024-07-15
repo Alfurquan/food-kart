@@ -1,6 +1,6 @@
 from ..data.db import DB
 from ..models.restaurant import Restaurant, MenuItem
-from ..config import config
+from typing import List
 from ..exception import RestaurantNotFoundException, MenuItemNotFoundException, RestaurantNameMissingException, RestaurantCapacityLessThanZeroException, MenuNameMissingException, MenuPriceNegativeException
 
 class RestaurantAPI:
@@ -79,11 +79,20 @@ class RestaurantAPI:
     
     def list_restaurants(self, name = None):
         restaurants = self.db.get_all()
+        restaurant_list : List[Restaurant] = []
         
         if name is not None:
             restaurants = [restaurant for restaurant in restaurants if restaurant["name"].lower() == name.lower()]
-            
-        return restaurants
+        
+        for restaurant in restaurants:
+            rest = Restaurant.from_dict(restaurant)
+            menu_items = rest.menu
+            rest.menu = []
+            for menu in menu_items:
+                rest.menu.append(MenuItem.from_dict(menu))
+            restaurant_list.append(rest)
+        
+        return restaurant_list
     
     def get_menu_items(self, rest_name):
         restaurants = self.db.get_all()
