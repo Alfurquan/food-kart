@@ -18,6 +18,7 @@ class OrderAPI:
     
     def list_orders(self, cust_id: int = None):
         orders = self.db.get_all()
+        order_results: List[Order] = []
         
         if cust_id is not None:
             orders = [
@@ -26,8 +27,16 @@ class OrderAPI:
                     if order['customer_id'] == cust_id
             ]
         
+        for order in orders:
+            order = Order.from_dict(order)
+            order_items = order.items
+            order.items = []
+            for item in order_items:
+                order.items.append(OrderItem.from_dict(item))
+            order_results.append(order)
+    
         self.db.close()
-        return orders
+        return order_results
     
     def create_orders(self, cust_id: int, items: List[str], quantities: List[int]):
         customer = self.customer_api.get_customer(cust_id)

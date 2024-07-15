@@ -16,7 +16,7 @@ class OrderItem:
     
     @classmethod
     def from_dict(cls, d):
-        return Order(**d)
+        return OrderItem(**d)
     
     def __repr__(self):
         return f"{self.name}: {self.quantity}"

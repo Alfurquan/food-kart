@@ -7,7 +7,7 @@ from foodkart.exception import CustomerNotFoundException
 from foodkart.models.customer import Customer
 from foodkart.models.restaurant import Restaurant
 from foodkart.models.menuitem import MenuItem
-from foodkart.models.order import OrderStatus
+from foodkart.models.order import OrderStatus, Order, OrderItem
 
 @pytest.fixture()
 def restaurant_api():
@@ -60,11 +60,23 @@ def test_list_orders_customer_is_none(order_api, db):
           ]  
         }
     ]
+    expected_orders = [
+        Order(id=1, customer_id=1, restaurant_id=2, 
+              restaurant_name='Arsalan', cost=300, order_status='Delivered', 
+              items=[OrderItem(name='Biryani', quantity=1), 
+                     OrderItem(name='Noodles', quantity=1)]),
+        Order(id=2, customer_id=2, restaurant_id=2, 
+              restaurant_name='Arsalan', cost=300, order_status='Delivered', 
+              items=[OrderItem(name='Biryani', quantity=1), 
+                     OrderItem(name='Noodles', quantity=1)]),
+        
+    ] 
+    
     db.get_all.return_value = orders
         
     actual_orders = order_api.list_orders()
     
-    assert actual_orders == orders
+    assert actual_orders == expected_orders
     
 def test_list_orders_customer_is_not_none(order_api, db):
     orders = [
@@ -106,25 +118,11 @@ def test_list_orders_customer_is_not_none(order_api, db):
         }
     ]
     expected_orders = [
-         {
-          'id':1,
-          'customer_id':1,
-          'restaurant_id': 2,
-          'restaurant_name': 'Arsalan',
-          'cost': 300,
-          'order_status': 'Delivered',
-          'items': [
-              {
-                  'name': 'Biryani',
-                  'quantity': 1,
-              },
-              {
-                  'name': 'Noodles',
-                  'quantity': 1
-              }
-          ]  
-        }
-    ]
+        Order(id=1, customer_id=1, restaurant_id=2, 
+              restaurant_name='Arsalan', cost=300, order_status='Delivered', 
+              items=[OrderItem(name='Biryani', quantity=1), 
+                     OrderItem(name='Noodles', quantity=1)])    
+    ] 
     db.get_all.return_value = orders
         
     actual_orders = order_api.list_orders(1)

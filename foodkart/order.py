@@ -92,7 +92,6 @@ def list(
     table.add_column("Cost")
     table.add_column("Order items")
     for order in orders:
-        order = Order.from_dict(order)
         table.add_row(str(order.id), order.restaurant_name, order.order_status, str(order.cost), str(order.items))
     
     out = StringIO()
