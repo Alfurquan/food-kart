@@ -21,4 +21,4 @@ class CheapestPriceRestaurantSelection(RestaurantSelection):
         for item in restaurant.menu:
             if item.name.lower() == food_item.lower():
                 return item.price
-        return int('inf')
+        return float('inf')
