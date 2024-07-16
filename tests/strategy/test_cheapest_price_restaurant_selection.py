@@ -62,4 +62,33 @@ def test_select_restaurant_restaurant_available_with_different_price(cheapest_re
         actual_restaurant = cheapest_restaurant_selection.select_restaurant(food_item)
         
         assert actual_restaurant == restaurants[1]
+        
+def test_get_eligible_restaurants_no_restaurant_found(cheapest_restaurant_selection):
+    food_item = ('Noodles', 5)
+    restaurants = [
+                   Restaurant(id=1, name='Arsalan', processing_capacity=4, menu=[MenuItem(id=1, name='Noodles', price=200)]), 
+                   Restaurant(id=2, name='Mcdonalds', processing_capacity=2, menu=[MenuItem(id=1, name='Noodles', price=200)])
+                ]
+    cheapest_restaurant_selection.restaurant_api = Mock(spec=RestaurantAPI)
+    cheapest_restaurant_selection.restaurant_api.list_restaurants.return_value = restaurants
+    
+    actual_restaurants = cheapest_restaurant_selection.get_eligible_restaurants(food_item)
+    
+    assert actual_restaurants == []
+    
+def test_get_eligible_restaurants_restaurant_found(cheapest_restaurant_selection):
+    food_item = ('Noodles', 5)
+    restaurants = [
+                   Restaurant(id=1, name='Arsalan', processing_capacity=10, menu=[MenuItem(id=1, name='Noodles', price=200)]), 
+                   Restaurant(id=2, name='Mcdonalds', processing_capacity=12, menu=[MenuItem(id=1, name='Noodles', price=200)]),
+                   Restaurant(id=2, name='Zeeshan', processing_capacity=2, menu=[MenuItem(id=1, name='Biryani', price=200)]),
+                ]
+    cheapest_restaurant_selection.restaurant_api = Mock(spec=RestaurantAPI)
+    cheapest_restaurant_selection.restaurant_api.list_restaurants.return_value = restaurants
+    
+    expected_restaurants = restaurants[0:2]
+    
+    actual_restaurants = cheapest_restaurant_selection.get_eligible_restaurants(food_item)
+    
+    assert actual_restaurants == expected_restaurants
     
