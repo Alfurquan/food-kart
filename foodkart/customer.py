@@ -16,6 +16,6 @@ def register(
     """
     name = " ".join(name)
     api = CustomerAPI(get_db())
-    api.add_customer(Customer(name, phone))
-    print("Customer registered successfully!")
+    id = api.add_customer(Customer(name, phone))
+    print(f"Customer with name {name} registered successfully!")
     
