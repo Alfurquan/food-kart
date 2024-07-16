@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch, call
 from foodkart.api.restaurant_api import RestaurantAPI
 from foodkart.api.order_api import OrderAPI
 from foodkart.api.customer_api import CustomerAPI
-from foodkart.exception import CustomerNotFoundException
+from foodkart.exception import CustomerNotFoundException, OrderNotFoundException, OrderAlreadyDelivered
 from foodkart.models.customer import Customer
 from foodkart.models.restaurant import Restaurant
 from foodkart.models.menuitem import MenuItem
@@ -257,3 +257,68 @@ def test_create_orders_multiple_items_from_same_restaurant(order_api, customer_a
         # # Verifying restaurant API interactions
         restaurant_api.get_restaurant.assert_has_calls([call(1), call(2)])
         restaurant_api.update_restaurant.assert_has_calls([call(1, restaurant_one), call(2, restaurant_two)])
+        
+def test_deliver_order_order_not_found(order_api, db):
+    db.get_item_by_id.return_value = None
+    
+    with pytest.raises(OrderNotFoundException):
+        order_api.deliver_order(1)
+        
+def test_deliver_order_order_already_delivered(order_api, db):
+    db.get_item_by_id.return_value =  {
+          'id':1,
+          'customer_id':1,
+          'restaurant_id': 2,
+          'restaurant_name': 'Arsalan',
+          'cost': 300,
+          'order_status': 'Delivered',
+          'items': [
+              {
+                  'name': 'Biryani',
+                  'quantity': 1,
+              },
+              {
+                  'name': 'Noodles',
+                  'quantity': 1
+              }
+          ]  
+        }
+    
+    with pytest.raises(OrderAlreadyDelivered):
+        order_api.deliver_order(1)
+        
+def test_deliver_order_order_not_delivered(order_api, restaurant_api, db):
+    order_document =  {
+          'id':1,
+          'customer_id':1,
+          'restaurant_id': 2,
+          'restaurant_name': 'Arsalan',
+          'cost': 300,
+          'order_status': 'Processing',
+          'items': [
+              {
+                  'name': 'Biryani',
+                  'quantity': 1,
+              },
+              {
+                  'name': 'Noodles',
+                  'quantity': 1
+              }
+          ]  
+        }
+    db.get_item_by_id.return_value =  order_document
+    order = Order.from_dict(order_document)
+    restaurant = Restaurant(id=1, name='Arsalan', processing_capacity=20, menu=[MenuItem(id=1, name='Biryani', price=200)])
+    restaurant_api.get_restaurant.return_value = restaurant
+    
+    actual_order = order_api.deliver_order(1)
+    
+    
+    ## Verify model changes
+    assert actual_order.order_status == OrderStatus.Delivered.value
+    assert restaurant.processing_capacity == 22
+    
+    ## Verify db interactions
+    db.get_item_by_id.assert_called_once_with(1)
+    db.update.assert_called_once_with(1, actual_order.to_dict())
+    restaurant_api.update_restaurant.assert_called_once_with(actual_order.restaurant_id, restaurant)

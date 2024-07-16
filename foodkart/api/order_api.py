@@ -92,21 +92,23 @@ class OrderAPI:
         return orders
     
     def deliver_order(self, order_id: int):
-        order: Order = Order.from_dict(self.db.get_item_by_id(order_id))
+        order = self.db.get_item_by_id(order_id)
         
         if order is None:
             raise OrderNotFoundException
+        
+        order = Order.from_dict(order)
         
         if order.order_status == OrderStatus.Delivered.value:
             raise OrderAlreadyDelivered       
         # Set status as delivered
         order.order_status = OrderStatus.Delivered.value
         self.db.update(order_id, order.to_dict())
-        self.db.close()
         
         # Add back restaurant processing capability
         restaurant : Restaurant = self.restaurant_api.get_restaurant(order.restaurant_id)
-        quantities = sum([order_item["quantity"] for order_item in order.items])
+        quantities = sum([order_item.quantity for order_item in order.items])
         restaurant.processing_capacity += quantities
         self.restaurant_api.update_restaurant(order.restaurant_id, restaurant)
+        return order
         
